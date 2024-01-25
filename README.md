@@ -12,12 +12,12 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
 
 ## Todo
 
-- [ ] Single time analysis
+- [X] Single time analysis
 - [ ] Able to calculate same statistics like MetriX page
   - [X] Show raw data DataFrame
   - [X] Balance versus Number of trades
   - [X] Statistics
-  - [ ] Daily Summary
+  - [X] Daily Summary
   - [ ] Visualize trades on candlestick charts
 - [ ] Additional usage
   - [ ] Option to show TP/SL in percentage
@@ -26,6 +26,8 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
   - [ ] Timezone shift
 - [ ] Analysis and persistent result (for each strategy)
 - [ ] Support general trades format analysis
+- [ ] Metric & Form number colors
+  - [Change metric color, font, background and style - 🎈 Using Streamlit - Streamlit](https://discuss.streamlit.io/t/change-metric-color-font-background-and-style/25309/4)
 
 ## Resources
 

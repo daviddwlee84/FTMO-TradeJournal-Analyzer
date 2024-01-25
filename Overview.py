@@ -7,6 +7,7 @@ import quantstats as qs
 import plotly.graph_objects as go
 import tempfile
 import streamlit.components.v1 as components
+from utils import MetricFormatter
 
 # extend pandas functionality with metrics, etc.
 qs.extend_pandas()
@@ -126,7 +127,14 @@ daily_df_new.index = daily_df_new.index.map(lambda x: x.strftime("%d %b %Y"))
 st.header("Daily Summary")
 st.dataframe(daily_df_new)
 
-# TODO: Consistency Score = (1 – (absolute value of the most profitable or losing day / absolute result of all trading days)) x 100%.
+st.metric(
+    "Consistency Score",
+    MetricFormatter.percent(
+        1 - (daily_df["Net Profit"].abs().max() / daily_df["Net Profit"].abs().sum())
+    ),
+    help="Consistency Score = (1 - (absolute value of the most profitable or losing day / absolute result of all trading days)) x 100%. Reference: [Consistency is very important for success in trading - FTMO](https://ftmo.com/en/consistency-is-very-important-for-success-in-trading/)",
+)
+
 
 st.header("Portfolio Statistics")
 account_size = st.number_input(
@@ -175,50 +183,55 @@ st.plotly_chart(fig)
 
 # Statistics
 # TODO: Better UI
-st.metric("Balance", account_prices[-1])
+st.metric("Balance", MetricFormatter.dollar(account_prices[-1]))
 st.metric("No. of trades", len(net_profit))
 win_profit = net_profit[net_profit > 0]
 loss_profit = net_profit[net_profit < 0]
 st.caption("Note that, `Net Profit = 0` trades are neither consider as Profit or Loss.")
-st.metric("Average Profit", avg_profit := win_profit.mean())
-st.metric("Average Loss", avg_loss := loss_profit.mean())
-st.metric("Lots", df["Volume"].sum())
+st.metric("Average Profit", MetricFormatter.dollar(avg_profit := win_profit.mean()))
+st.metric("Average Loss", MetricFormatter.dollar(avg_loss := loss_profit.mean()))
+st.metric("Lots", MetricFormatter.round(df["Volume"].sum()))
 st.metric(
     "Win Rate (FTMO)",
-    win_rate := len(win_profit) / len(net_profit),
+    MetricFormatter.percent(win_rate := len(win_profit) / len(net_profit)),
     help="`Net Profit = 0` is also included as denominator.",
 )
 st.metric(
     "Win Rate (quantstats)",
-    qs.stats.win_rate(percent_change_for_qs),
+    MetricFormatter.percent(qs.stats.win_rate(percent_change_for_qs)),
     help='"Only non-zero net profit are considered."',
 )
 st.metric(
     "Average RRR",
-    abs(avg_profit / avg_loss),
+    MetricFormatter.round(abs(avg_profit / avg_loss)),
     help="RRR (Reward-Risk-Ratio) is the ratio between the average profit and average loss of your account positions. RRR alone does not necessarily signify a profitable trading system if not considered together with Win rate.",
 )
 st.metric(
     "Expectancy",
-    win_rate * avg_profit + (1 - win_rate) * avg_loss,
+    MetricFormatter.dollar(win_rate * avg_profit + (1 - win_rate) * avg_loss),
     help="Expectancy projects the hypothetical value of any future single trade, based on the ratio of your account win ratio, loss ratio and RRR.",
 )
 st.metric(
     "Profit Factor (FTMO)",
-    abs(win_profit.sum() / loss_profit.sum()),
+    MetricFormatter.round(abs(win_profit.sum() / loss_profit.sum())),
     help="Profit factor is the ratio of gross profits divided by gross losses. If the Profit factor is above 1, the trading system indicates profitability. The higher the Profit factor, the better.",
 )
-st.metric("Profit Factor (quantstats)", qs.stats.profit_factor(percent_change_for_qs))
+st.metric(
+    "Profit Factor (quantstats)",
+    MetricFormatter.round(qs.stats.profit_factor(percent_change_for_qs)),
+)
 
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 # NOTE: use mkstemp will have permission issue: PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
 temp_file_name = tempfile.mktemp(suffix=".html", dir=os.path.join(curr_dir, "temp"))
 
+st.header("Quantstats Report")
+title = st.text_input("Report Title", "Strategy Tearsheet")
 report_download = st.empty()
 with st.spinner("Generating Detail Report..."):
     # TODO: customize output title, etc.
-    qs.reports.html(percent_change_for_qs, output=temp_file_name)
+    qs.reports.html(percent_change_for_qs, output=temp_file_name, title=title)
     with open(temp_file_name, "r") as fp:
         html = fp.read()
     components.html(html, scrolling=True, height=800)
