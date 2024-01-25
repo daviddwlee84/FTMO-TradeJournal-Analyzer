@@ -7,6 +7,8 @@ import quantstats as qs
 import plotly.graph_objects as go
 import tempfile
 import streamlit.components.v1 as components
+import requests
+import webbrowser
 
 # extend pandas functionality with metrics, etc.
 qs.extend_pandas()
@@ -30,6 +32,21 @@ if trading_journal_file is None:
 """
     )
     st.stop()
+
+with st.expander('Trading Journal Downloader'):
+    st.caption('Make sure you have logged in your FTMO account.')
+    with st.form("TradingJournalDownloader"):
+        ftmo_metrix_id = st.text_input("MetriX ID", 2100893235)
+        download_format = st.selectbox(
+            "Download Format",
+            ["csv", "xlsx"],
+            format_func=lambda x: "CSV" if x == "csv" else "Excel",
+        )
+        if st.form_submit_button("Download"):
+            # NOTE: since FTMO require login, we cannot use HTTP GET
+            webbrowser.open_new_tab(f"https://trader.ftmo.com/journal/generate_{download_format}/{ftmo_metrix_id}")
+        if st.form_submit_button("Go to MatriX"):
+            webbrowser.open_new_tab(f"https://trader.ftmo.com/metrix/{ftmo_metrix_id}")
 
 if trading_journal_file.name.endswith(".csv"):
     df = pd.read_csv(trading_journal_file, sep=";")
