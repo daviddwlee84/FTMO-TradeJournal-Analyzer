@@ -4,7 +4,7 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
 
 ## Getting Started
 
-1. Open this tool at [here]() or run locally using `streamlit run Overview.py`
+1. Open this tool at [https://ftmo-trading-journal-analyzer.streamlit.app/](https://ftmo-trading-journal-analyzer.streamlit.app/) or run locally using `streamlit run Overview.py`
 2. Open [Client Area | FTMO](https://trader.ftmo.com/client-area)
 3. Goto one of your account's MatriX like `https://trader.ftmo.com/metrix/xxxxxxxxxx`
 4. Scroll down to "Trading Journal" section and export to either csv or excel format
@@ -19,5 +19,8 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
   - [ ] Statistics
   - [ ] Daily Summary
   - [ ] Visualize trades on candlestick charts
+- [ ] Additional usage
+  - [ ] Option to show TP/SL in percentage
+  - [X] Able to filter date
 - [ ] Analysis and persistent result (for each strategy)
 - [ ] Support general trades format analysis
