@@ -22,5 +22,6 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
 - [ ] Additional usage
   - [ ] Option to show TP/SL in percentage
   - [X] Able to filter date
+  - [X] Symbol filter
 - [ ] Analysis and persistent result (for each strategy)
 - [ ] Support general trades format analysis

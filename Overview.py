@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import re
 
 st.set_page_config(page_title="FTMO Trading Journal Analyzer")
 st.title("FTMO Trading Journal Analyzer")
@@ -53,7 +54,15 @@ if len(date_range) <= 1:
 
 df = df[
     (pd.to_datetime(date_range[0]) <= df["Open"])
+    # https://stackoverflow.com/questions/441147/how-to-subtract-a-day-from-a-date
     & (df["Open"] <= pd.to_datetime(date_range[1] + datetime.timedelta(days=1)))
 ]
+
+symbols = st.multiselect(
+    "Symbol Filter", df["Symbol"].unique(), help="Select none means select all."
+)
+symbols_select_pattern = "|".join(map(re.escape, symbols))
+# https://stackoverflow.com/questions/75834122/search-of-a-set-of-strings-in-a-column-containing-strings-in-a-pandas-dataframe
+df = df[df["Symbol"].str.contains(rf"\b(?:{symbols_select_pattern})\b")]
 
 st.dataframe(df)
