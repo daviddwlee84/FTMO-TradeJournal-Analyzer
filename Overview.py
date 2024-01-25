@@ -117,11 +117,12 @@ fig = go.Figure(
 st.plotly_chart(fig)
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
-fd, name = tempfile.mkstemp(suffix=".html", dir=os.path.join(curr_dir, "temp"))
+# NOTE: use mkstemp will have permission issue: PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
+temp_file_name = tempfile.mktemp(suffix=".html", dir=os.path.join(curr_dir, "temp"))
 
 # TODO: customize output title, etc.
-qs.reports.html(percent_change_for_qs, output=name)
-with open(name, "r") as fp:
+qs.reports.html(percent_change_for_qs, output=temp_file_name)
+with open(temp_file_name, "r") as fp:
     html = fp.read()
 components.html(html, scrolling=True, height=800)
 st.download_button(
@@ -129,5 +130,5 @@ st.download_button(
     html,
     file_name=os.path.splitext(trading_journal_file.name)[0] + "_report.html",
 )
-# PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
-os.remove(name)
+
+os.remove(temp_file_name)
