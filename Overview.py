@@ -28,7 +28,9 @@ with st.expander("Trading Journal Downloader"):
         ["csv", "xlsx"],
         format_func=lambda x: "CSV" if x == "csv" else "Excel",
     )
+
     # NOTE: since FTMO require login, we cannot use HTTP GET
+    # https://docs.streamlit.io/library/api-reference/widgets/st.link_button
     st.link_button(
         "Download",
         f"https://trader.ftmo.com/journal/generate_{download_format}/{ftmo_metrix_id}",
@@ -139,8 +141,9 @@ start_date = st.date_input(
 )
 
 net_profit = close_time_df["Net Profit"]
-net_profit.loc[pd.to_datetime(start_date)] = 0
-account_prices = net_profit.sort_index().cumsum() + account_size
+net_profit_new = net_profit.copy()
+net_profit_new.loc[pd.to_datetime(start_date)] = 0
+account_prices = net_profit_new.sort_index().cumsum() + account_size
 net_worth = account_prices / account_size
 
 # NOTE: index should be datetime for quantstats
@@ -169,6 +172,44 @@ fig = go.Figure(
     ),
 )
 st.plotly_chart(fig)
+
+# Statistics
+# TODO: Better UI
+st.metric("Balance", account_prices[-1])
+st.metric("No. of trades", len(net_profit))
+win_profit = net_profit[net_profit > 0]
+loss_profit = net_profit[net_profit < 0]
+st.caption("Note that, `Net Profit = 0` trades are neither consider as Profit or Loss.")
+st.metric("Average Profit", avg_profit := win_profit.mean())
+st.metric("Average Loss", avg_loss := loss_profit.mean())
+st.metric("Lots", df["Volume"].sum())
+st.metric(
+    "Win Rate (FTMO)",
+    win_rate := len(win_profit) / len(net_profit),
+    help="`Net Profit = 0` is also included as denominator.",
+)
+st.metric(
+    "Win Rate (quantstats)",
+    qs.stats.win_rate(percent_change_for_qs),
+    help='"Only non-zero net profit are considered."',
+)
+st.metric(
+    "Average RRR",
+    abs(avg_profit / avg_loss),
+    help="RRR (Reward-Risk-Ratio) is the ratio between the average profit and average loss of your account positions. RRR alone does not necessarily signify a profitable trading system if not considered together with Win rate.",
+)
+st.metric(
+    "Expectancy",
+    win_rate * avg_profit + (1 - win_rate) * avg_loss,
+    help="Expectancy projects the hypothetical value of any future single trade, based on the ratio of your account win ratio, loss ratio and RRR.",
+)
+st.metric(
+    "Profit Factor (FTMO)",
+    abs(win_profit.sum() / loss_profit.sum()),
+    help="Profit factor is the ratio of gross profits divided by gross losses. If the Profit factor is above 1, the trading system indicates profitability. The higher the Profit factor, the better.",
+)
+st.metric("Profit Factor (quantstats)", qs.stats.profit_factor(percent_change_for_qs))
+
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 # NOTE: use mkstemp will have permission issue: PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
