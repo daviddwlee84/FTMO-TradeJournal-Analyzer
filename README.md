@@ -15,13 +15,26 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
 - [ ] Single time analysis
 - [ ] Able to calculate same statistics like MetriX page
   - [X] Show raw data DataFrame
-  - [ ] Balance versus Number of trades
-  - [ ] Statistics
+  - [X] Balance versus Number of trades
+  - [X] Statistics
   - [ ] Daily Summary
   - [ ] Visualize trades on candlestick charts
 - [ ] Additional usage
   - [ ] Option to show TP/SL in percentage
   - [X] Able to filter date
   - [X] Symbol filter
+  - [ ] Timezone shift
 - [ ] Analysis and persistent result (for each strategy)
 - [ ] Support general trades format analysis
+
+## Resources
+
+### Portfolio and Metrics
+
+- [ranaroussi/quantstats: Portfolio analytics for quants, written in Python](https://github.com/ranaroussi/quantstats)
+- [quantopian/empyrical: Common financial risk and performance metrics. Used by zipline and pyfolio.](https://github.com/quantopian/empyrical)
+- [quantopian/pyfolio: Portfolio and risk analytics in Python](https://github.com/quantopian/pyfolio)
+
+### FTMO
+
+- [Points, pips and ticks - FTMO](https://ftmo.com/en/points-pips-and-ticks/)
