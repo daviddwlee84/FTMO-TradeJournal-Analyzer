@@ -140,6 +140,7 @@ st.header("Portfolio Statistics")
 account_size = st.number_input(
     "Initial Account Size", min_value=0, value=100_000, step=10_000
 )
+max_risk = st.number_input("Max Risk", min_value=0.0, value=0.1)
 
 start_date = st.date_input(
     "Start date",
@@ -163,6 +164,15 @@ if x_axis_mode == "close time":
 else:
     x_axis = pd.RangeIndex(len(account_prices)) + 1
 
+
+# TODO: fill green when net profit > 0, fill red vice versa
+# def fill_color(label: int) -> str:
+#     if label >= 1:
+#         return "rgba(0,250,0,0.4)"
+#     else:
+#         return "rgba(250,0,0,0.4)"
+
+
 # TODO: another y-axis for percent of balance change
 fig = go.Figure(
     data=[
@@ -171,7 +181,30 @@ fig = go.Figure(
             y=account_prices,
             mode="lines",
             name="Balance",
-        )
+            # TODO: use better green
+            line={"color": "green"},
+        ),
+        go.Scatter(
+            x=x_axis,
+            y=[account_size] * len(x_axis),
+            # https://stackoverflow.com/questions/64741015/plotly-how-to-color-the-fill-between-two-lines-based-on-a-condition
+            fill="tonexty",
+            fillcolor="rgba(0,250,0,0.4)",
+            name="Fill",
+            marker={"color": "rgba(0,250,0,0.4)"},
+            legend=None,
+        ),
+        # https://plotly.com/python/line-and-scatter/
+        go.Scatter(
+            x=x_axis,
+            y=[account_size - (max_loss := max_risk * account_size)] * len(x_axis),
+            mode="lines",
+            name="Max Loss",
+            text=f"Max Loss = {max_loss}",
+            marker={"color": "red"},
+            # https://stackoverflow.com/questions/74322004/how-to-have-one-item-in-the-legend-selected-by-default-in-plotly-dash
+            visible="legendonly",
+        ),
     ],
     layout=go.Layout(
         title=go.layout.Title(text="Current Results"),
