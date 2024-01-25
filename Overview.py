@@ -94,11 +94,14 @@ close_time_df = df.set_index("Close", drop=False).rename_axis("time")
 daily_df = close_time_df.groupby(pd.Grouper(freq="D")).agg(
     {"Ticket": "count", "Volume": "sum", "NetProfit": "sum"}
 )
-daily_df.rename_axis("Date")
+daily_df.rename_axis("Date", inplace=True)
 daily_df.columns = ["Trades", "Lots", "Net Profit"]
+daily_df_new = daily_df.copy().sort_index(ascending=(date_order == "Ascending"))
+# https://discuss.streamlit.io/t/date-display-with-pandas/38351
+daily_df_new.index = daily_df.index.map(lambda x: x.strftime("%d %b %Y"))
 
 st.header("Daily Summary")
-st.dataframe(daily_df.sort_index(ascending=(date_order == "Ascending")))
+st.dataframe(daily_df_new)
 
 # TODO: Consistency Score = (1 – (absolute value of the most profitable or losing day / absolute result of all trading days)) x 100%.
 
