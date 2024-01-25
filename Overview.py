@@ -82,7 +82,7 @@ symbols_select_pattern = "|".join(map(re.escape, symbols))
 # https://stackoverflow.com/questions/75834122/search-of-a-set-of-strings-in-a-column-containing-strings-in-a-pandas-dataframe
 df = df[df["Symbol"].str.contains(rf"\b(?:{symbols_select_pattern})\b")]
 
-df["NetProfit"] = df["Profit"] + df["Commissions"]
+df["Net Profit"] = df["Profit"] + df["Commissions"]
 
 st.header("Detail Trades")
 st.dataframe(df.sort_values("Open", ascending=(date_order == "Ascending")))
@@ -92,13 +92,19 @@ close_time_df = df.set_index("Close", drop=False).rename_axis("time")
 # Daily Summary
 # https://stackoverflow.com/questions/39400115/python-pandas-group-by-date-using-datetime-data
 daily_df = close_time_df.groupby(pd.Grouper(freq="D")).agg(
-    {"Ticket": "count", "Volume": "sum", "NetProfit": "sum"}
+    {
+        "Ticket": "count",
+        "Volume": "sum",
+        "Profit": "sum",
+        "Commissions": "sum",
+        "Net Profit": "sum",
+    }
 )
 daily_df.rename_axis("Date", inplace=True)
-daily_df.columns = ["Trades", "Lots", "Net Profit"]
+daily_df.rename(columns={"Ticket": "Trades", "Volume": "Lots"}, inplace=True)
 daily_df_new = daily_df.copy().sort_index(ascending=(date_order == "Ascending"))
 # https://discuss.streamlit.io/t/date-display-with-pandas/38351
-daily_df_new.index = daily_df.index.map(lambda x: x.strftime("%d %b %Y"))
+daily_df_new.index = daily_df_new.index.map(lambda x: x.strftime("%d %b %Y"))
 
 st.header("Daily Summary")
 st.dataframe(daily_df_new)
@@ -113,9 +119,11 @@ account_size = st.number_input(
 start_date = st.date_input(
     "Start date",
     value=min_date,
+    max_value=min_date,
+    help="Account creation date. Default the first trade date. (Basically used for drawing.)",
 )
 
-net_profit = close_time_df["NetProfit"]
+net_profit = close_time_df["Net Profit"]
 net_profit.loc[pd.to_datetime(start_date)] = 0
 account_prices = net_profit.sort_index().cumsum() + account_size
 net_worth = account_prices / account_size
