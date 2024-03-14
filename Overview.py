@@ -59,6 +59,8 @@ else:
     st.error(f"Invalid file type: {trading_journal_file.name}")
     st.stop()
 
+st.subheader('Data Selection')
+
 date_order = st.selectbox(
     "Date Order",
     ["Ascending", "Descending"],
@@ -100,7 +102,28 @@ symbols_select_pattern = "|".join(map(re.escape, symbols))
 # https://stackoverflow.com/questions/75834122/search-of-a-set-of-strings-in-a-column-containing-strings-in-a-pandas-dataframe
 df = df[df["Symbol"].str.contains(rf"\b(?:{symbols_select_pattern})\b")]
 
+st.subheader('Account Settings')
+
+# TODO: move account prices and net worth as well as balance calculation to the front
+account_size = st.number_input(
+    "Initial Account Size", min_value=0, value=100_000, step=10_000
+)
+start_date = st.date_input(
+    "Start date",
+    value=min_date,
+    max_value=min_date,
+    help="Account creation date. Default the first trade date. (Basically used for drawing.)",
+)
+
+# Sorting by date for cumulative sum calculation
+# df.sort_values("Close", ascending=True, inplace=True)
+
 df["Net Profit"] = df["Profit"] + df["Commissions"]
+# Basically similar to Pips
+# df["TP Distance"] = abs(df["Price"] - df["TP"]) * (df["TP"] > 0)
+# df["SL Distance"] = abs(df["Price"] - df["SL"]) * (df["SL"] > 0)
+# df["TP Ratio"] = df["TP Distance"] / df["Price"]
+# df["SL Ratio"] = df["SL Distance"] / df["Price"]
 
 st.header("Detail Trades")
 st.dataframe(df.sort_values("Open", ascending=(date_order == "Ascending")))
@@ -137,17 +160,8 @@ st.metric(
 
 
 st.header("Portfolio Statistics")
-account_size = st.number_input(
-    "Initial Account Size", min_value=0, value=100_000, step=10_000
-)
-max_risk = st.number_input("Max Risk", min_value=0.0, value=0.1)
 
-start_date = st.date_input(
-    "Start date",
-    value=min_date,
-    max_value=min_date,
-    help="Account creation date. Default the first trade date. (Basically used for drawing.)",
-)
+max_risk = st.number_input("Max Risk", min_value=0.0, value=0.1)
 
 net_profit = close_time_df["Net Profit"]
 net_profit_new = net_profit.copy()
@@ -187,6 +201,8 @@ fig = go.Figure(
         go.Scatter(
             x=x_axis,
             y=[account_size] * len(x_axis),
+            # https://stackoverflow.com/questions/71221738/how-to-make-a-plotly-scatter-plot-without-marker-dots
+            mode="lines",
             # https://stackoverflow.com/questions/64741015/plotly-how-to-color-the-fill-between-two-lines-based-on-a-condition
             fill="tonexty",
             fillcolor="rgba(0,250,0,0.4)",

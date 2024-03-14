@@ -19,8 +19,11 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
   - [X] Statistics
   - [X] Daily Summary
   - [ ] Visualize trades on candlestick charts
+- [ ] More detail information for trades table
+  - [ ] Balance at the end of trade (initial balance as a trade..?)
+  - [ ] TP, SL pips, percentage of change, etc.
+  - [ ] Balance => account net worth
 - [ ] Additional usage
-  - [ ] Option to show TP/SL in percentage
   - [X] Able to filter date
   - [X] Symbol filter
   - [ ] Timezone shift
@@ -28,6 +31,10 @@ Analysis portfolio and risk on FTMO trades export from FTMO Trade Journal using 
 - [ ] Support general trades format analysis
 - [ ] Metric & Form number colors
   - [Change metric color, font, background and style - 🎈 Using Streamlit - Streamlit](https://discuss.streamlit.io/t/change-metric-color-font-background-and-style/25309/4)
+- [ ] Maybe also support TradingView Strategy dump and comparison between them
+- [ ] Try convert to VectorBT (vbt.Portfolio.from_orders)
+  - [trades - vectorbt](https://vectorbt.dev/api/portfolio/trades/#example)
+  - [base - vectorbt](https://vectorbt.dev/api/portfolio/base/#vectorbt.portfolio.base.Portfolio.from_orders)
 
 ## Resources
 
