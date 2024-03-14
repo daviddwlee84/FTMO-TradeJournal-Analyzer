@@ -106,7 +106,9 @@ def flatten_closed_trades_to_orders(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def flatten_df_to_close_size_fixed_fees(
-    flatten_df: pd.DataFrame, symbols: Union[str, List[str], None] = None
+    flatten_df: pd.DataFrame,
+    symbols: Union[str, List[str], None] = None,
+    series_as_df: bool = False,
 ) -> Dict[str, pd.DataFrame]:
     """
     https://vectorbt.dev/api/portfolio/base/#vectorbt.portfolio.base.Portfolio.from_orders
@@ -136,11 +138,24 @@ def flatten_df_to_close_size_fixed_fees(
         )
 
     if isinstance(symbols, str):
-        return dict(
-            close=flatten_df.loc[symbols]["Price"],
-            size=flatten_df.loc[symbols]["Volume"],
-            fixed_fees=flatten_df.loc[symbols]["Commissions"],
-        )
+        if series_as_df:
+            return dict(
+                close=flatten_df.loc[symbols][["Price"]].rename(
+                    columns={"Price": symbols}
+                ),
+                size=flatten_df.loc[symbols][["Volume"]].rename(
+                    columns={"Volume": symbols}
+                ),
+                fixed_fees=flatten_df.loc[symbols][["Commissions"]].rename(
+                    columns={"Commissions": symbols}
+                ),
+            )
+        else:
+            return dict(
+                close=flatten_df.loc[symbols]["Price"],
+                size=flatten_df.loc[symbols]["Volume"],
+                fixed_fees=flatten_df.loc[symbols]["Commissions"],
+            )
 
     return dict(
         close=groupby_symbol(flatten_df["Price"], symbols),
@@ -167,6 +182,8 @@ if __name__ == "__main__":
     # BUG: somehow some size/volume are wrong
     for symbol_pf in pf:
         print(symbol_pf.orders.records_readable)
+
+    print(pf.columns)
 
     print(btc_orders := flatten_df_to_close_size_fixed_fees(flatten_df, "BTCUSD"))
     btc_pf = vbt.Portfolio.from_orders(**btc_orders)
