@@ -7,7 +7,7 @@ import quantstats as qs
 import plotly.graph_objects as go
 import tempfile
 import streamlit.components.v1 as components
-from utils import MetricFormatter
+from utils import MetricFormatter, file_uploading_widget
 
 # extend pandas functionality with metrics, etc.
 qs.extend_pandas()
@@ -15,49 +15,7 @@ qs.extend_pandas()
 st.set_page_config(page_title="FTMO Trading Journal Analyzer", layout="wide")
 st.title("FTMO Trading Journal Analyzer")
 
-trading_journal_file = st.file_uploader(
-    "Upload FTMO Trading Journal Exports",
-    type=["csv", "xlsx"],
-    accept_multiple_files=False,
-)
-
-with st.expander("Trading Journal Downloader"):
-    st.caption("Make sure you have logged in your FTMO account.")
-    ftmo_metrix_id = st.text_input("MetriX ID", "2100893235")
-    download_format = st.selectbox(
-        "Download Format",
-        ["csv", "xlsx"],
-        format_func=lambda x: "CSV" if x == "csv" else "Excel",
-    )
-
-    # NOTE: since FTMO require login, we cannot use HTTP GET
-    # https://docs.streamlit.io/library/api-reference/widgets/st.link_button
-    st.link_button(
-        "Download",
-        f"https://trader.ftmo.com/journal/generate_{download_format}/{ftmo_metrix_id}",
-    )
-    st.link_button("Go to MatriX", f"https://trader.ftmo.com/metrix/{ftmo_metrix_id}")
-
-if trading_journal_file is None:
-    st.markdown(
-        """
-1. Open [Client Area | FTMO](https://trader.ftmo.com/client-area)
-2. Goto one of your account's MatriX like `https://trader.ftmo.com/metrix/xxxxxxxxxx`
-3. Scroll down to "Trading Journal" section and export to either csv or excel format
-4. Upload your `export-xxxxxxxxxx.csv` or `export-xxxxxxxxxx.xlsx` here
-"""
-    )
-    st.stop()
-
-if trading_journal_file.name.endswith(".csv"):
-    df = pd.read_csv(trading_journal_file, sep=";")
-elif trading_journal_file.name.endswith(".xlsx") or trading_journal_file.name.endswith(
-    ".xls"
-):
-    df = pd.read_excel(trading_journal_file)
-else:
-    st.error(f"Invalid file type: {trading_journal_file.name}")
-    st.stop()
+trading_journal_file, df = file_uploading_widget()
 
 st.subheader('Data Selection')
 
