@@ -28,11 +28,6 @@ date_order = st.selectbox(
     else "Descending (Recent First)",
 )
 
-# Move this to independent file
-datetime_columns = ["Open", "Close"]
-for column in datetime_columns:
-    df[column] = pd.to_datetime(df[column])
-
 min_date = df["Open"].min().date()
 max_date = (df["Open"].max()).date()
 date_range = st.date_input(

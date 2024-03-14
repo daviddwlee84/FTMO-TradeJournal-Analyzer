@@ -76,4 +76,44 @@ def file_uploading_widget() -> Tuple[UploadedFile, pd.DataFrame]:
         st.error(f"Invalid file type: {trading_journal_file.name}")
         st.stop()
 
+    datetime_columns = ["Open", "Close"]
+    for column in datetime_columns:
+        df[column] = pd.to_datetime(df[column])
+
     return trading_journal_file, df
+
+
+def flatten_closed_trades_to_orders(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    FTMO Symbol Commission
+    https://ftmo.com/en/symbols/
+
+    https://pandas.pydata.org/docs/user_guide/advanced.html#hierarchical-indexing-multiindex
+    """
+    open_df = df[["Open", "Type", "Volume", "Symbol", "Price", "Commissions"]]
+    open_df.loc[df["Type"] == "sell", "Volume"] *= -1
+    # typically charges commissions on closed positions rather than open positions
+    open_df["Commissions"] = 0
+    open_df.rename(columns={"Open": "Time"}, inplace=True)
+    open_df.set_index(["Symbol", "Time"], inplace=True)
+    close_df = df[["Close", "Type", "Volume", "Symbol", "Price.1", "Commissions"]]
+    close_df.loc[df["Type"] == "buy", "Volume"] *= -1
+    close_df.rename(columns={"Close": "Time", "Price.1": "Price"}, inplace=True)
+    close_df.set_index(["Symbol", "Time"], inplace=True)
+    return pd.concat([open_df, close_df]).sort_index(ascending=True)[
+        ["Volume", "Price", "Commissions"]
+    ]
+
+
+if __name__ == "__main__":
+
+    df = pd.read_csv("demo/export-1706151888.csv", sep=";")
+
+    datetime_columns = ["Open", "Close"]
+    for column in datetime_columns:
+        df[column] = pd.to_datetime(df[column])
+
+    print(flatten_df := flatten_closed_trades_to_orders(df))
+    import ipdb
+
+    ipdb.set_trace()
