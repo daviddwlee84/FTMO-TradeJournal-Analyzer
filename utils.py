@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict, List
 import numpy as np
 import streamlit as st
 import pandas as pd
@@ -105,6 +105,50 @@ def flatten_closed_trades_to_orders(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
 
+def flatten_df_to_close_size_fixed_fees(
+    flatten_df: pd.DataFrame, symbols: Union[str, List[str], None] = None
+) -> Dict[str, pd.DataFrame]:
+    """
+    https://vectorbt.dev/api/portfolio/base/#vectorbt.portfolio.base.Portfolio.from_orders
+
+    ValueError: cannot reindex on an axis with duplicate labels
+    https://stackoverflow.com/questions/27236275/what-does-valueerror-cannot-reindex-from-a-duplicate-axis-mean
+    """
+
+    def groupby_symbol(series: pd.Series, symbols: List[str]) -> pd.DataFrame:
+        close = {}
+        for symbol, symbol_series in series.groupby(level="Symbol"):
+            if symbols and symbol not in symbols:
+                continue
+            symbol_series = symbol_series.droplevel(level="Symbol")
+            # Remove potential duplicate index
+            symbol_series = symbol_series[~symbol_series.index.duplicated()]
+            symbol_series.name = symbol
+            close[symbol] = symbol_series
+        return pd.concat(close.values(), keys=close.keys(), axis=1)
+
+    # https://stackoverflow.com/questions/21081042/detect-whether-a-dataframe-has-a-multiindex
+    if not isinstance(flatten_df.index, pd.MultiIndex):
+        return dict(
+            close=flatten_df["Price"],
+            size=flatten_df["Volume"],
+            fixed_fees=flatten_df["Commissions"],
+        )
+
+    if isinstance(symbols, str):
+        return dict(
+            close=flatten_df.loc[symbols]["Price"],
+            size=flatten_df.loc[symbols]["Volume"],
+            fixed_fees=flatten_df.loc[symbols]["Commissions"],
+        )
+
+    return dict(
+        close=groupby_symbol(flatten_df["Price"], symbols),
+        size=groupby_symbol(flatten_df["Volume"], symbols),
+        fixed_fees=groupby_symbol(flatten_df["Commissions"], symbols),
+    )
+
+
 if __name__ == "__main__":
 
     df = pd.read_csv("demo/export-1706151888.csv", sep=";")
@@ -114,6 +158,24 @@ if __name__ == "__main__":
         df[column] = pd.to_datetime(df[column])
 
     print(flatten_df := flatten_closed_trades_to_orders(df))
+
+    print(orders := flatten_df_to_close_size_fixed_fees(flatten_df))
+
+    import vectorbt as vbt
+
+    pf = vbt.Portfolio.from_orders(**orders)
+    # BUG: somehow some size/volume are wrong
+    for symbol_pf in pf:
+        print(symbol_pf.orders.records_readable)
+
+    print(btc_orders := flatten_df_to_close_size_fixed_fees(flatten_df, "BTCUSD"))
+    btc_pf = vbt.Portfolio.from_orders(**btc_orders)
+    print(btc_pf.orders.records_readable)
+
+    print(eth_orders := flatten_df_to_close_size_fixed_fees(flatten_df.loc["ETHUSD"]))
+    eth_pf = vbt.Portfolio.from_orders(**eth_orders)
+    print(eth_pf.orders.records_readable)
+
     import ipdb
 
     ipdb.set_trace()
